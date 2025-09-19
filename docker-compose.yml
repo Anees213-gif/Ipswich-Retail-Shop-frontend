@@ -1,0 +1,84 @@
+services:
+  # Django Backend
+  backend:
+    build: ./backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py load_sample_data &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - db_volume:/app/db.sqlite3
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=django-insecure-dev-key-change-in-production
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/api/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Celery Worker (commented out for now)
+  # celery:
+  #   build: ./backend
+  #   command: celery -A ipswich_retail worker --loglevel=info
+  #   volumes:
+  #     - ./backend:/app
+  #   environment:
+  #     - DEBUG=True
+  #     - SECRET_KEY=django-insecure-dev-key-change-in-production
+  #     - DB_HOST=db
+  #     - DB_NAME=ipswich_retail
+  #     - DB_USER=postgres
+  #     - DB_PASSWORD=postgres
+  #     - REDIS_URL=redis://redis:6379/1
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
+  #   depends_on:
+  #     - db
+  #     - redis
+  #     - backend
+
+  # Celery Beat (commented out for now)
+  # celery-beat:
+  #   build: ./backend
+  #   command: celery -A ipswich_retail beat --loglevel=info
+  #   volumes:
+  #     - ./backend:/app
+  #   environment:
+  #     - DEBUG=True
+  #     - SECRET_KEY=django-insecure-dev-key-change-in-production
+  #     - DB_HOST=db
+  #     - DB_NAME=ipswich_retail
+  #     - DB_USER=postgres
+  #     - DB_PASSWORD=postgres
+  #     - REDIS_URL=redis://redis:6379/1
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #     - CELERY_RESULT_BACKEND=redis://redis:6379/0
+  #   depends_on:
+  #     - db
+  #     - redis
+  #     - backend
+
+  # Frontend (React)
+  frontend:
+    build: ./frontend
+    command: npm run dev -- --host 0.0.0.0 --port 3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    depends_on:
+      - backend
+
+volumes:
+  static_volume:
+  media_volume:
+  db_volume:
