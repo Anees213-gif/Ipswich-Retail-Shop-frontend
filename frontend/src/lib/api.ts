@@ -2,7 +2,7 @@
 import type { Product, ProductListResponse, Category, Review, Order, ApiResponse, ApiError, DashboardStats, PaginationMeta } from '@/types';
 
 // Environment configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://aneesali009.pythonanywhere.com/api';
 const USE_MOCK_DATA = false; // Always use real API
 
 // CSRF token management
